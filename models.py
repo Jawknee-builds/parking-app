@@ -1,5 +1,5 @@
-from database import Base
 from sqlalchemy import Column, Integer, String, Float, Boolean
+from database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -11,12 +11,9 @@ class User(Base):
 class ParkingZone(Base):
     __tablename__ = "parking_zones"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    
-    # The 4 points for the Geofence
+    name = Column(String)
     min_lat = Column(Float)
     max_lat = Column(Float)
     min_lon = Column(Float)
     max_lon = Column(Float)
-    
     is_available = Column(Boolean, default=True)
