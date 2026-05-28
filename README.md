@@ -5,7 +5,8 @@
 [![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB.svg)](#)
 [![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F27.svg)](#)
 [![Mapbox](https://img.shields.io/badge/Map-MapboxGL-3bb2d0.svg)](#)
-[![Deployment Backend](https://img.shields.io/badge/Backend%20Deploy-Railway-0B0D17.svg)](#)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?repository=github.com/Jawknee-builds/parking-app&branch=main&name=parking-app)
+[![Deploy to Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Jawknee-builds/parking-app)
 [![Deployment Frontend](https://img.shields.io/badge/Frontend%20Deploy-Vercel-000000.svg)](#)
 
 A full-stack, secure smart campus parking orchestration and reservation system. Engineered for university campuses, the application coordinates GPS telemetry data from students' mobile devices against active campus parking geofences in real-time, utilizing exact bounding box checks to authorize parking sessions, paired with scheduled booking queues.
@@ -96,6 +97,13 @@ The frontend has been polished into a premium dark-themed dashboard featuring:
 
 ## 🌩️ Production Deployment Guide
 
+### Backend: Koyeb (Recommended - Free Forever with 0 sleep time)
+1. Click the **Deploy to Koyeb** button above or log into the [Koyeb Dashboard](https://app.koyeb.com).
+2. Create a new Service and choose **GitHub** as the deployment method.
+3. Select the `parking-app` repository.
+4. Mount environment variables if needed (Koyeb automatically supports SQLite files out-of-the-box or can be hooked to Postgres).
+5. Click **Deploy**. Koyeb will serve your FastAPI backend permanently online.
+
 ### Backend: Railway
 - Mount your repository to **Railway**.
 - Set the environment variables:
@@ -105,7 +113,7 @@ The frontend has been polished into a premium dark-themed dashboard featuring:
 ### Frontend: Vercel
 - Connect the `parking-ui` subdirectory to **Vercel**.
 - Add the Environment Variable:
-  - `REACT_APP_API_URL` = `https://your-backend-railway-url.up.railway.app`
+  - `REACT_APP_API_URL` = `https://your-backend-koyeb-or-railway-url.koyeb.app`
 - Deploy!
 
 ---
