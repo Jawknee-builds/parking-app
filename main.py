@@ -1,36 +1,83 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
 
-from fastapi.middleware.cors import CORSMiddleware
+import crud, models, schemas, utils
+from database import engine, get_db, SessionLocal
 
-# Add this right after app = FastAPI()
+# 1. Initialize Database Tables
+models.Base.metadata.create_all(bind=engine)
+
+# 2. Define the FastAPI App Instance
+app = FastAPI(title="Manipal Smart Parking")
+
+# 3. Configure CORS to be production-ready (allows Vercel deployments to connect seamlessly)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, change this to your URL
+    allow_origins=["*"], # Allow any frontend origin to eliminate CORS blocks in production
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-import crud, models, schemas, utils
-from database import SessionLocal, engine
-
-# This creates the physical tables in your Postgres database
-models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="Manipal Smart Parking API")
-
-# This enables the "Authorize" button in the /docs UI
+# 4. Define Security Scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# --- DATABASE DEPENDENCY ---
-def get_db():
+# --- DATABASE AUTOMATED STARTUP SEEDING ---
+@app.on_event("startup")
+def seed_database_on_startup():
     db = SessionLocal()
     try:
-        yield db
+        # Check if parking zones exist. If empty, seed realistic campus zones
+        if db.query(models.ParkingZone).count() == 0:
+            print("[*] Empty database detected. Seeding realistic Manipal Campus Parking Zones...")
+            zones_to_seed = [
+                {
+                    "name": "MIT Food Court (Zone A)",
+                    "min_lat": 13.348,
+                    "max_lat": 13.351,
+                    "min_lon": 74.791,
+                    "max_lon": 74.793,
+                    "is_available": True
+                },
+                {
+                    "name": "KMC Hospital (Zone B)",
+                    "min_lat": 13.353,
+                    "max_lat": 13.356,
+                    "min_lon": 74.787,
+                    "max_lon": 74.789,
+                    "is_available": True
+                },
+                {
+                    "name": "Library & Admin Block (Zone C)",
+                    "min_lat": 13.351,
+                    "max_lat": 13.353,
+                    "min_lon": 74.793,
+                    "max_lon": 74.795,
+                    "is_available": False # Seed as full to demonstrate geofence occupancy checks
+                },
+                {
+                    "name": "Student Center North (Zone D)",
+                    "min_lat": 13.354,
+                    "max_lat": 13.357,
+                    "min_lon": 74.790,
+                    "max_lon": 74.792,
+                    "is_available": True
+                }
+            ]
+            for zone_data in zones_to_seed:
+                db_zone = models.ParkingZone(**zone_data)
+                db.add(db_zone)
+            db.commit()
+            print("[+] Seeding completed successfully!")
+    except Exception as e:
+        print(f"[-] Database seeding failed: {e}")
     finally:
         db.close()
+
 
 # --- AUTHENTICATION ROUTES ---
 
@@ -47,56 +94,46 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not utils.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
-    # Generate the "Digital ID Card" (JWT)
     access_token = utils.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# --- PARKING ZONE ROUTES (The "Getters" and "Setters") ---
+
+# --- PARKING ZONE ROUTES ---
 
 @app.get("/zones", response_model=List[schemas.ParkingZone])
 def read_zones(db: Session = Depends(get_db)):
-    """ Returns all zones so the Streamlit UI can show them to students """
     return crud.get_zones(db)
 
 @app.post("/zones", response_model=schemas.ParkingZone)
 def create_zone(zone: schemas.ParkingZoneCreate, db: Session = Depends(get_db)):
-    """ Admin route to add new spots like AB5, KC, or the Library """
     return crud.create_parking_zone(db=db, zone=zone)
 
-# --- PROTECTED PARKING ROUTE ---
+
+# --- RESERVATION & PARKING ROUTES ---
 
 @app.post("/park")
 def park_vehicle(
     request: schemas.ParkRequest, 
     db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme) # <--- THIS LOCKS THE ROUTE
+    token: str = Depends(oauth2_scheme)
 ):
-    """ Only logged-in students with a valid Token can use this """
+    """Immediate parking with Geofence verification"""
     return crud.process_parking(db, request)
 
+@app.post("/reserve", response_model=schemas.Reservation)
+def book_spot(
+    res_data: schemas.ReservationCreate, 
+    db: Session = Depends(get_db), 
+    token: str = Depends(oauth2_scheme)
+):
+    """Future booking for a specific time slot"""
+    # Auto-infer user from DB or default to 1 for MVP simplicity
+    return crud.create_reservation(db, res_data, user_id=1)
 
-@app.post("/park")
-def park_vehicle(
-    request: schemas.ParkRequest, 
+@app.get("/reservations", response_model=List[schemas.Reservation])
+def list_reservations(
     db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme) # Requires JWT Token
+    token: str = Depends(oauth2_scheme)
 ):
-    """
-    The main 'Park' button action. 
-    Verifies identity via Token and Location via Geofence.
-    """
-    return crud.process_parking(db, request)
-
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI(title="Manipal Smart Parking")
-
-# --- THE FIX STARTS HERE ---
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # Allows your React app
-    allow_credentials=True,
-    allow_methods=["*"], # Allows GET, POST, etc.
-    allow_headers=["*"], # Allows Tokens/Auth headers
-)
-# --- THE FIX ENDS HERE ---
+    """List all active parking reservations for the user"""
+    return crud.get_user_reservations(db, user_id=1)

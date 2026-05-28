@@ -22,34 +22,39 @@ def create_parking_zone(db: Session, zone: schemas.ParkingZoneCreate):
     db.refresh(db_zone)
     return db_zone
 
-def process_parking(db: Session, request: schemas.ParkRequest):
-    zone = db.query(models.ParkingZone).filter(models.ParkingZone.id == request.zone_id).first()
-    if not zone:
-        return {"error": "Zone not found"}
-    
-    is_inside = (zone.min_lat <= request.user_lat <= zone.max_lat) and \
-                (zone.min_lon <= request.user_lon <= zone.max_lon)
-    
-    if is_inside:
-        return {"status": "success", "message": f"Parked in {zone.name}"}
-    return {"status": "fail", "message": "Outside zone boundaries"}
+def get_user_reservations(db: Session, user_id: int):
+    return db.query(models.Reservation).filter(models.Reservation.user_id == user_id).all()
+
+def create_reservation(db: Session, reservation: schemas.ReservationCreate, user_id: int):
+    db_res = models.Reservation(
+        user_id=user_id,
+        zone_id=reservation.zone_id,
+        start_time=reservation.start_time,
+        end_time=reservation.end_time,
+        is_active=True
+    )
+    db.add(db_res)
+    db.commit()
+    db.refresh(db_res)
+    return db_res
 
 def process_parking(db: Session, request: schemas.ParkRequest):
-    # 1. Fetch the Zone from Postgres
+    # Fetch the Zone from the database
     zone = db.query(models.ParkingZone).filter(models.ParkingZone.id == request.zone_id).first()
     
     if not zone:
-        return {"status": "error", "message": "Parking Zone not found in Manipal database."}
+        return {
+            "status": "error", 
+            "message": "Parking Zone not found in Manipal database.",
+            "location_verified": False
+        }
 
-    # 2. The Geofence Logic (The Bounding Box Check)
-    # Checks if: min_lat <= student_lat <= max_lat AND min_lon <= student_lon <= max_lon
+    # Bounding Box Geofence check
     is_inside_lat = zone.min_lat <= request.user_lat <= zone.max_lat
     is_inside_lon = zone.min_lon <= request.user_lon <= zone.max_lon
 
     if is_inside_lat and is_inside_lon:
-        # 3. Update the Zone status (Optional: mark as occupied)
-        # zone.is_available = False 
-        # db.commit()
+        # Mark zone as occupied if needed in a live implementation
         return {
             "status": "success", 
             "message": f"Welcome to {zone.name}! Your parking session has started.",
