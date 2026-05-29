@@ -7,11 +7,11 @@
 [![Mapbox](https://img.shields.io/badge/Map-MapboxGL-3bb2d0.svg)](#)
 [![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?repository=github.com/Jawknee-builds/parking-app&branch=main&name=parking-app)
 [![Deploy to Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Jawknee-builds/parking-app)
-[![Deployment Frontend](https://img.shields.io/badge/Frontend%20Deploy-Vercel-000000.svg)](#)
+[![Deployment Frontend](https://img.shields.io/badge/Frontend%20Deploy-Vercel-000000.svg)](https://parking-ui-self.vercel.app)
 
 A full-stack, secure smart campus parking orchestration and reservation system. Engineered for university campuses, the application coordinates GPS telemetry data from students' mobile devices against active campus parking geofences in real-time, utilizing exact bounding box checks to authorize parking sessions, paired with scheduled booking queues.
 
-👉 **[Live Vercel Frontend UI Link](https://manipal-parking.vercel.app/)**
+👉 **[Live Vercel Frontend UI Link](https://parking-ui-self.vercel.app)**
 👉 **[Live Railway Backend API Link](https://manipal-parking-production.up.railway.app/docs)**
 
 ---
