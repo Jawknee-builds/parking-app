@@ -58,12 +58,14 @@ function App() {
 
   useEffect(() => {
     fetchZones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (token) {
       fetchReservations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleAuth = async (e) => {
