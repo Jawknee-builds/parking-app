@@ -4,7 +4,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Uses Postgres URL in production (e.g. Railway) and falls back to SQLite locally
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./parking.db")
+if os.getenv("VERCEL"):
+    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/parking.db")
+else:
+    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./parking.db")
 
 # Standard configuration logic for SQLite compatibility
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):

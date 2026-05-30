@@ -12,7 +12,7 @@
 A full-stack, secure smart campus parking orchestration and reservation system. Engineered for university campuses, the application coordinates GPS telemetry data from students' mobile devices against active campus parking geofences in real-time, utilizing exact bounding box checks to authorize parking sessions, paired with scheduled booking queues.
 
 👉 **[Live Vercel Frontend UI Link](https://parking-ui-self.vercel.app)**
-👉 **[Live Railway Backend API Link](https://manipal-parking-production.up.railway.app/docs)**
+👉 **[Live Vercel Backend API Link](https://parking-app-indol-five.vercel.app/docs)**
 
 ---
 
@@ -97,23 +97,16 @@ The frontend has been polished into a premium dark-themed dashboard featuring:
 
 ## 🌩️ Production Deployment Guide
 
-### Backend: Render (100% Free, NO Credit Card Required 🌟)
-1. Click the **Deploy to Render** button above or log into the [Render Dashboard](https://dashboard.render.com).
-2. Choose **Web Service** and link your `parking-app` repository.
-3. Vercel/Render will auto-detect your project. On startup, the server automatically boots SQLite.
-4. Click **Deploy**.
-
-### Backend: Railway
-- Mount your repository to **Railway**.
-- Set the environment variables:
-  - `DATABASE_URL` = (Your Railway PostgreSQL Connection URI)
-- The server will automatically build the tables on the Postgres volume on startup!
+### Backend: Vercel (100% Free Serverless, NO Card Verification Required 🌟)
+1. Deploy the root directory of the repository to **Vercel**.
+2. Vercel automatically detects the `vercel.json` file and handles the FastAPI builder using `@vercel/python`.
+3. The sqlite database utilizes `/tmp/parking.db` for serverless ephemeral persistence, running completely card-free!
 
 ### Frontend: Vercel
-- Connect the `parking-ui` subdirectory to **Vercel**.
-- Add the Environment Variable:
-  - `REACT_APP_API_URL` = `https://your-backend-render-or-railway-url.onrender.com`
-- Deploy!
+1. Connect the `parking-ui` subdirectory to **Vercel** as a separate project.
+2. Add the Environment Variable:
+   - `REACT_APP_API_URL` = `https://parking-app-indol-five.vercel.app`
+3. Click **Deploy**. Vercel will build the React app and host it live under your custom alias!
 
 ---
 *Developed with 💜 by [Jawknee-builds](https://github.com/Jawknee-builds)*
