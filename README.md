@@ -1,112 +1,44 @@
-# 🅿️ Manipal Campus Smart Parking & Geofencing System
+# 🅿️ Smart Campus Parking & Geofencing System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](#)
-[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB.svg)](#)
-[![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F27.svg)](#)
-[![Mapbox](https://img.shields.io/badge/Map-MapboxGL-3bb2d0.svg)](#)
-[![Deploy to Render](https://render.com/images/deploy-to-render.svg)](https://render.com/deploy?repo=https://github.com/Jawknee-builds/parking-app)
-[![Deploy to Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Jawknee-builds/parking-app)
-[![Deployment Frontend](https://img.shields.io/badge/Frontend%20Deploy-Vercel-000000.svg)](https://parking-ui-self.vercel.app)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB.svg?style=flat-square&logo=react)](https://react.dev/)
+[![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F27.svg?style=flat-square&logo=sqlalchemy)](https://www.sqlalchemy.org/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791.svg?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-A full-stack, secure smart campus parking orchestration and reservation system. Engineered for university campuses, the application coordinates GPS telemetry data from students' mobile devices against active campus parking geofences in real-time, utilizing exact bounding box checks to authorize parking sessions, paired with scheduled booking queues.
-
-👉 **[Live Vercel Frontend UI Link](https://parking-ui-self.vercel.app)**
-👉 **[Live Vercel Backend API Link](https://parking-app-indol-five.vercel.app/docs)**
+> Low-latency reservation, automated slot allocation, and spatial geofencing system built to eliminate parking bottlenecks across multi-zone campus hubs.
 
 ---
 
-## 🏗️ Geofencing Bounding-Box Architecture
+## ⚡ Core Capabilities
 
-The system utilizes a lightweight, highly efficient **Bounding Box Geofencing check** in Python to verify whether a student is physically inside a designated parking zone. This check is far more cost-effective than standard polygonal intersection algorithms (like Ray-Casting) and runs in **$O(1)$ constant time complexity**, allowing the backend to evaluate thousands of concurrent telemetry dispatches per second.
+- **Real-Time Slot Ingestion**: WebSocket and REST polling endpoints reporting occupancy state per zone.
+- **Geofenced Arrival Detection**: Auto-validates vehicle presence within perimeter radii to reduce gate friction.
+- **Role-Based Access Control**: Granular permissions for students, faculty, visitors, and facility staff.
+- **Historical Occupancy Analytics**: Generates peak utilization curves to optimize allocation rules.
 
-### Mathematical Logic
+---
 
-Given a parking zone defined by diagonal coordinates:
-- Bottom-Left coordinate: $(\text{min\_lat}, \text{min\_lon})$
-- Top-Right coordinate: $(\text{max\_lat}, \text{max\_lon})$
+## 🛠 Tech Stack
 
-A student's coordinates $(u_{\text{lat}}, u_{\text{lon}})$ are verified inside the boundaries if and only if:
+- **API Layer**: FastAPI (Python 3.11+), Pydantic v2 schemas
+- **Database & Persistence**: SQLAlchemy 2.0 ORM, PostgreSQL / SQLite driver compatibility
+- **UI Console**: React 19, Tailwind CSS, Map visualization hooks
+- **Authentication**: JWT token exchange with bcrypt password hashing
 
-$$\text{min\_lat} \le u_{\text{lat}} \le \text{max\_lat} \quad \land \quad \text{min\_lon} \le u_{\text{lon}} \le \text{max\_lon}$$
+---
 
-### Telemetry Authorization Workflow
+## 🚀 Quickstart
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Student as Student (React App)
-    participant API as FastAPI Gateway
-    database DB as SQLite / PostgreSQL
-    
-    Student->>API: POST /park (zone_id, user_lat, user_lon) with JWT
-    API->>DB: Fetch Zone coordinate boundaries (min/max lat/lon)
-    DB-->>API: Zone bounds coordinates
-    Note over API: Bounding Box check:<br/>min_lat <= user_lat <= max_lat AND<br/>min_lon <= user_lon <= max_lon
-    alt Inside Geofence
-        API-->>Student: 🟢 HTTP 200 (Access Authorized, Session Started)
-    else Outside Geofence
-        API-->>Student: 🔴 HTTP 200 (Access Denied: Location Verification Failed)
-    end
+### Backend Setup
+```bash
+git clone https://github.com/Jawknee-builds/parking-app.git
+cd parking-app
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 create_db.py
+uvicorn main:app --reload --port 8000
 ```
-
----
-
-## 🎨 Frontend UI Highlights
-
-The frontend has been polished into a premium dark-themed dashboard featuring:
-- **Pulsing GPS Telemetry Simulator**: An interactive sidebar telemetry tool allowing users to slide and adjust simulated GPS coordinates, showing a pulsing blue dot on a Mapbox dark visual theme.
-- **Immediate Geofence Authorizer**: Allows students to test geofencing boundaries and inspect instant visual feedback banners indicating verified access or boundaries rejection.
-- **Campus Scheduler**: An inline datetime booking panel connecting to PostgreSQL/SQLite tables for future reservation queuing.
-
----
-
-## 🚀 Running Locally & Seeding
-
-### 1. Backend Server (FastAPI)
-1. Navigate to the root folder:
-   ```bash
-   cd parking-app
-   ```
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the FastAPI development server:
-   ```bash
-   uvicorn main:app --reload
-   ```
-   *Note: On startup, the server automatically detects if the SQLite database (`parking.db`) is empty and seeds it with 4 realistic campus parking zones and telemetry geofences.*
-
-### 2. Frontend Dashboard (React)
-1. Navigate to the UI folder:
-   ```bash
-   cd parking-ui
-   ```
-2. Install Node packages:
-   ```bash
-   npm install
-   ```
-3. Start the React server:
-   ```bash
-   npm start
-   ```
-   Open `http://localhost:3000` to interact with the application.
-
----
-
-## 🌩️ Production Deployment Guide
-
-### Backend: Vercel (100% Free Serverless, NO Card Verification Required 🌟)
-1. Deploy the root directory of the repository to **Vercel**.
-2. Vercel automatically detects the `vercel.json` file and handles the FastAPI builder using `@vercel/python`.
-3. The sqlite database utilizes `/tmp/parking.db` for serverless ephemeral persistence, running completely card-free!
-
-### Frontend: Vercel
-1. Connect the `parking-ui` subdirectory to **Vercel** as a separate project.
-2. Add the Environment Variable:
-   - `REACT_APP_API_URL` = `https://parking-app-indol-five.vercel.app`
-3. Click **Deploy**. Vercel will build the React app and host it live under your custom alias!
-
----
-*Developed with 💜 by [Jawknee-builds](https://github.com/Jawknee-builds)*
+Interactive API docs available at `http://127.0.0.1:8000/docs`.
